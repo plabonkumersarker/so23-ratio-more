@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SO-10220 · Competition Ratio vs Selection</title>
+<script>try{var t=localStorage.getItem('so10220_theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch(e){document.documentElement.dataset.theme='dark'}</script>
+<style>
+:root{--bg:#fff;--fg:#000;--rgb:0,0,0;--mut:rgba(0,0,0,.55);--line:rgba(0,0,0,.16);--soft:rgba(0,0,0,.05)}
+[data-theme=dark]{--bg:#000;--fg:#fff;--rgb:255,255,255;--mut:rgba(255,255,255,.58);--line:rgba(255,255,255,.2);--soft:rgba(255,255,255,.07)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;transition:background .25s,color .25s;-webkit-text-size-adjust:100%}
+.mono,td,th,.num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.wrap{max-width:1100px;margin:0 auto;padding:0 18px}
+header{border-bottom:1px solid var(--fg);padding:28px 0 22px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.kicker{font:11px ui-monospace,Menlo,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+h1{font-size:clamp(1.5rem,4.5vw,2.5rem);line-height:1.1;letter-spacing:-.02em;margin:8px 0 6px;font-weight:700}
+.sub{color:var(--mut);max-width:640px;font-size:.93rem}
+#theme{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--fg);background:var(--bg);color:var(--fg);cursor:pointer;display:grid;place-items:center;font-size:13px;line-height:1;transition:transform .3s}
+#theme:hover{transform:rotate(180deg)}
+section{padding:34px 0 8px}
+h2{font-size:1.05rem;font-weight:700;letter-spacing:-.01em;display:flex;gap:10px;align-items:baseline}
+h2 b{font:400 11px ui-monospace,Menlo,monospace;color:var(--mut)}
+.lead{color:var(--mut);font-size:.88rem;margin:4px 0 16px;max-width:720px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));border:1px solid var(--fg);margin-top:24px}
+.stat{padding:14px 14px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat .v{font:700 1.5rem ui-monospace,Menlo,monospace;letter-spacing:-.03em}
+.stat .l{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--mut)}
+.box{border:1px solid var(--line);padding:16px}
+.row{display:grid;grid-template-columns:70px 1fr 120px;gap:12px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
+.row:last-child{border:0}
+.row .lb{font:600 .85rem ui-monospace,Menlo,monospace}
+.bar{height:14px;background:var(--soft);position:relative;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--fg);transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.bar i.o{background:repeating-linear-gradient(45deg,var(--fg) 0 2px,transparent 2px 5px)}
+.row .val{text-align:right;font:.8rem ui-monospace,Menlo,monospace}
+.row .val small{display:block;color:var(--mut);font-size:.7rem}
+.seg{display:inline-flex;border:1px solid var(--fg);margin-bottom:12px;flex-wrap:wrap}
+.seg button{background:var(--bg);color:var(--fg);border:0;padding:7px 12px;font:12px ui-monospace,Menlo,monospace;cursor:pointer}
+.seg button+button{border-left:1px solid var(--fg)}
+.seg button.on{background:var(--fg);color:var(--bg)}
+.scroll{overflow-x:auto;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:.82rem;min-width:520px}
+th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);font-weight:600;position:sticky;top:0;background:var(--bg)}
+th.s{cursor:pointer}th.s:hover{color:var(--fg)}
+tr:last-child td{border:0}
+#heat td.c{text-align:center;min-width:64px}
+#heat tbody tr.bk{cursor:pointer}
+#heat tbody tr.bk:hover td:first-child{text-decoration:underline}
+#heat tbody tr.cur td:first-child{font-weight:700}
+#heat tbody tr.cur td:first-child:before{content:"▸ "}
+#heat td:first-child{white-space:normal;min-width:170px;font-family:inherit}
+.pick{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0}
+select,input{background:var(--bg);color:var(--fg);border:1px solid var(--fg);padding:9px 11px;font:14px inherit;border-radius:0;max-width:100%;outline:none}
+select{min-width:260px}
+input{width:220px;font-family:ui-monospace,Menlo,monospace}
+.btn{background:var(--bg);color:var(--fg);border:1px solid var(--fg);padding:8px 14px;font:12px ui-monospace,Menlo,monospace;cursor:pointer;margin-top:12px}
+.btn:hover{background:var(--fg);color:var(--bg)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:14px 0 20px}
+.card{border:1px solid var(--line);padding:11px 12px}
+.card .v{font:700 1.25rem ui-monospace,Menlo,monospace}
+.card .l{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--mut)}
+.insight{border-left:3px solid var(--fg);padding:8px 14px;margin:0 0 20px;background:var(--soft);font-size:.9rem}
+.strip{position:relative;height:44px;margin:26px 4px 34px;border-bottom:1px solid var(--fg)}
+.strip .t{position:absolute;bottom:0;width:2px;height:100%;margin-left:-1px;background:var(--fg);opacity:.22}
+.strip .rg{position:absolute;bottom:-7px;height:5px;background:var(--fg)}
+.strip .md{position:absolute;bottom:-4px;top:-12px;width:3px;margin-left:-1.5px;background:var(--fg);outline:2px solid var(--bg)}
+.strip .md em{position:absolute;top:-15px;left:50%;transform:translateX(-50%);font:10px ui-monospace,monospace;font-style:normal;white-space:nowrap}
+.strip .ax{position:absolute;bottom:-26px;font:10px ui-monospace,monospace;color:var(--mut);transform:translateX(-50%)}
+.legend{font-size:.75rem;color:var(--mut);display:flex;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.sw{display:inline-block;width:10px;height:10px;background:var(--fg);margin-right:5px;vertical-align:-1px}
+.sw.o{background:repeating-linear-gradient(45deg,var(--fg) 0 2px,transparent 2px 5px)}
+.hit{border:1px solid var(--fg);padding:12px 14px;margin-top:12px;font-size:.88rem}
+.hit div+div{margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
+.tag{display:inline-block;border:1px solid var(--fg);padding:0 6px;font:11px ui-monospace,monospace}
+footer{margin-top:50px;border-top:1px solid var(--line);padding:22px 0 90px;color:var(--mut);font-size:.78rem}
+footer p{max-width:760px;margin-bottom:6px}
+.vc{position:fixed;left:10px;bottom:32px;z-index:9;display:flex;align-items:center;gap:6px;border:1px solid var(--fg);background:var(--bg);padding:3px 9px 3px 7px;font:10px ui-monospace,Menlo,monospace;letter-spacing:.05em}
+.vc i{width:6px;height:6px;border-radius:50%;background:var(--fg);animation:p 1.8s infinite}
+@keyframes p{50%{opacity:.15}}
+.credit-bar{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;justify-content:center;align-items:center;gap:10px;padding:5px 10px;background:var(--bg);border-top:1px solid var(--line);font:10px/1.4 ui-monospace,Menlo,monospace;color:var(--mut);letter-spacing:.03em;flex-wrap:wrap}
+.credit-bar .l{opacity:.7;margin-right:4px}
+.credit-bar a{color:var(--mut);text-decoration:none;border-bottom:1px solid transparent;transition:color .2s,border-color .2s}
+.credit-bar a:hover{color:var(--fg);border-color:var(--fg)}
+.credit-bar .d{width:1px;height:9px;background:var(--line)}
+.err{border:1px solid var(--fg);padding:18px;margin:30px 0}
+@media(max-width:600px){.row{grid-template-columns:54px 1fr 92px;gap:8px}.wrap{padding:0 14px}select{min-width:0;width:100%}input{width:100%}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="top">
+    <div>
+      <div class="kicker">Bangladesh Bank · Senior Officer · Job ID 10220 · Viva Analysis</div>
+      <h1>Does the competition ratio matter?</h1>
+      <p class="sub">How selected candidates in each bank were spread across viva groups of different competition ratios.</p>
+    </div>
+    <button id="theme" title="Toggle day / night" aria-label="Toggle theme">◐</button>
+  </div>
+  <div class="stats" id="stats"></div>
+</div></header>
+
+<main class="wrap" id="app"><p class="lead" style="margin-top:30px">Loading data…</p></main>
+
+<footer><div class="wrap">
+  <p><b>Ratio</b> = written-qualified candidates in a viva group's roll range ÷ candidates called to viva in that group.</p>
+  <p><b>Share of bank</b> = of everyone selected in a bank, the % who came from groups in that bucket.</p>
+  <p><b>Selection rate</b> = of all viva candidates in that bucket's groups, the % selected in that bank. Use this to compare buckets fairly, since buckets differ in size.</p>
+  <p>A candidate selected in several banks is counted in each bank, and once in the "All banks" row.</p>
+</div></footer>
+
+<div class="vc" title="Visitors"><i></i><span id="visitorCount">—</span></div>
+
+<!-- Credit Section -->
+<div class="credit-bar">
+  <span><span class="l">Hypothesis</span><a href="https://www.facebook.com/share/1GidotutT9/" target="_blank" rel="noopener">Thohidul Islam Riad</a></span>
+  <span class="d"></span>
+  <span><span class="l">Coding</span><a href="https://plabonkumersarker.github.io/profile" target="_blank" rel="noopener">Plabon Kumer Sarker</a></span>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const f1=n=>(+n).toFixed(1),f2=n=>(+n).toFixed(2),nf=n=>(+n).toLocaleString();
+let D,metric='share',cur=0,sortKey='ratio',sortDir=-1,showAll=false,rollIdx=new Map(),grpSel=new Map();
+
+/* theme */
+$('#theme').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;try{localStorage.setItem('so10220_theme',t)}catch(e){}};
+
+async function init(){
+  try{
+    const r=await fetch('bank_ratio_analysis.json',{cache:'no-cache'});
+    if(!r.ok)throw 0;D=await r.json();
+  }catch(e){
+    $('#app').innerHTML='<div class="err"><b>Could not load bank_ratio_analysis.json</b><p class="lead" style="margin:6px 0 0">Keep it in the same folder as index.html and open the page through a web server (GitHub Pages, Netlify, or <span class="mono">python -m http.server</span>). Browsers block loading local files directly.</p></div>';
+    return;
+  }
+  D.banks.forEach(b=>b.candidates.forEach(c=>{
+    if(!rollIdx.has(c.roll))rollIdx.set(c.roll,[]);
+    rollIdx.get(c.roll).push({bank:b.bankName,rank:c.meritRank,group:c.group,ratio:c.ratio,bucket:c.bucket});
+    if(!grpSel.has(c.group))grpSel.set(c.group,new Set());
+    grpSel.get(c.group).add(c.roll);
+  }));
+  const m=D.meta;
+  $('#stats').innerHTML=[[nf(m.totalWrittenUnique),'Written qualified'],[nf(m.totalVivaCandidates),'Viva candidates'],[nf(m.totalUniqueSelected),'Unique selected'],[f1(m.totalUniqueSelected/m.totalVivaCandidates*100)+'%','Overall rate'],[D.groups.length,'Viva groups'],[m.totalBanks,'Banks']].map(a=>`<div class="stat"><div class="v">${a[0]}</div><div class="l">${a[1]}</div></div>`).join('');
+  $('#app').innerHTML=`
+  <section><h2>01 <span>Overall by ratio bucket</span><b>all banks</b></h2>
+   <p class="lead">Solid bar: selection rate (% of viva candidates in that bucket who got selected anywhere). Hatched bar: how large the bucket is.</p>
+   <div class="box" id="overall"></div></section>
+  <section><h2>02 <span>Bank × bucket map</span><b>tap a bank</b></h2>
+   <p class="lead">Darker cells mean a higher value. Switch the metric below, then tap a bank to open its details.</p>
+   <div class="seg" id="seg"><button data-m="share" class="on">Share of bank %</button><button data-m="rate">Selection rate %</button><button data-m="count">Count</button></div>
+   <div class="scroll"><table id="heat"></table></div></section>
+  <section id="detail"><h2>03 <span>Bank detail</span><b id="dn"></b></h2>
+   <div class="pick"><select id="sel"></select></div><div id="dbody"></div></section>
+  <section><h2>04 <span>Roll lookup</span><b>who got where</b></h2>
+   <p class="lead">Enter a roll number to see its group, ratio and every bank it was selected in.</p>
+   <div class="pick"><input id="roll" inputmode="numeric" placeholder="e.g. 147398"></div><div id="rres"></div></section>
+  <section><h2>05 <span>All viva groups</span><b>click headers to sort</b></h2>
+   <div class="scroll"><table id="gt"></table></div></section>`;
+  $('#seg').onclick=e=>{const b=e.target.closest('button');if(!b)return;metric=b.dataset.m;[...$('#seg').children].forEach(x=>x.classList.toggle('on',x===b));heat()};
+  $('#sel').innerHTML=D.banks.map((b,i)=>`<option value="${i}">${esc(b.bankName)}</option>`).join('');
+  $('#sel').onchange=e=>pick(+e.target.value,false);
+  $('#roll').oninput=lookup;
+  overall();heat();detail();groups();
+}
+
+function overall(){
+  const mx=Math.max(...D.overall.map(o=>o.vivaCandidates)),mr=Math.max(...D.overall.map(o=>o.selectionRatePct));
+  $('#overall').innerHTML=D.overall.map(o=>`<div class="row"><div class="lb">${esc(o.bucket)}</div>
+   <div><div class="bar" title="Selection rate"><i style="width:${o.selectionRatePct/mr*100}%"></i></div><div class="bar" style="height:7px;margin-top:4px" title="Bucket size"><i class="o" style="width:${o.vivaCandidates/mx*100}%"></i></div></div>
+   <div class="val">${f1(o.selectionRatePct)}%<small>${o.selectedUnique}/${nf(o.vivaCandidates)} · ${o.groups} grp</small></div></div>`).join('');
+}
+
+function heat(){
+  const val=(b,i)=>metric==='share'?b.buckets[i].shareOfBankSelectedPct:metric==='rate'?b.buckets[i].selectionRatePct:b.buckets[i].selected;
+  const ov=D.overall,tot=D.meta.totalUniqueSelected;
+  const allRow=i=>metric==='share'?ov[i].selectedUnique/tot*100:metric==='rate'?ov[i].selectionRatePct:ov[i].selectedUnique;
+  let mx=0;D.banks.forEach(b=>b.buckets.forEach((_,i)=>mx=Math.max(mx,val(b,i))));
+  const fmt=v=>metric==='count'?nf(v):f1(v)+'%';
+  const cell=v=>{const a=mx?.07+.88*v/mx:.07;return `<td class="c" style="background:rgba(var(--rgb),${a.toFixed(2)});color:${a>.5?'var(--bg)':'var(--fg)'}">${fmt(v)}</td>`};
+  $('#heat').innerHTML=`<thead><tr><th>Bank</th><th>Selected</th>${D.buckets.map(b=>`<th>${esc(b.label)}</th>`).join('')}</tr></thead><tbody>
+  <tr><td><b>All banks</b> (unique)</td><td>${nf(tot)}</td>${D.buckets.map((_,i)=>cell(allRow(i))).join('')}</tr>
+  ${D.banks.map((b,k)=>`<tr class="bk ${k===cur?'cur':''}" data-k="${k}"><td>${esc(b.bankName)}</td><td>${nf(b.totalSelected)}</td>${b.buckets.map((_,i)=>cell(val(b,i))).join('')}</tr>`).join('')}</tbody>`;
+  $('#heat').querySelectorAll('tr.bk').forEach(r=>r.onclick=()=>pick(+r.dataset.k,true));
+}
+
+function pick(k,scroll){cur=k;showAll=false;$('#sel').value=k;heat();detail();if(scroll)$('#detail').scrollIntoView({behavior:'smooth'})}
+
+function detail(){
+  const b=D.banks[cur];$('#dn').textContent=nf(b.matchedWithViva)+' of '+nf(b.totalSelected)+' matched';
+  const rs=b.ratioStats,all=D.groups.map(g=>g.ratio),lo=Math.floor(Math.min(...all)),hi=Math.ceil(Math.max(...all)),P=v=>(v-lo)/(hi-lo)*100;
+  const mxS=Math.max(...b.buckets.map(x=>x.shareOfBankSelectedPct)),mxR=Math.max(...b.buckets.map(x=>x.selectionRatePct));
+  const topS=b.buckets.reduce((a,x)=>x.selected>a.selected?x:a),topR=b.buckets.reduce((a,x)=>x.selectionRatePct>a.selectionRatePct?x:a),lowR=b.buckets.filter(x=>x.vivaCandidatesInBucket>0).reduce((a,x)=>x.selectionRatePct<a.selectionRatePct?x:a);
+  let ax='';for(let i=lo;i<=hi;i++)ax+=`<span class="ax" style="left:${P(i)}%">${i}</span>`;
+  const cands=showAll?b.candidates:b.candidates.slice(0,15);
+  $('#dbody').innerHTML=`
+  <div class="cards">
+   <div class="card"><div class="v">${nf(b.totalSelected)}</div><div class="l">Selected</div></div>
+   <div class="card"><div class="v">${f2(rs.min)}</div><div class="l">Min ratio</div></div>
+   <div class="card"><div class="v">${f2(rs.median)}</div><div class="l">Median ratio</div></div>
+   <div class="card"><div class="v">${f2(rs.mean)}</div><div class="l">Mean ratio</div></div>
+   <div class="card"><div class="v">${f2(rs.max)}</div><div class="l">Max ratio</div></div></div>
+  <div class="insight"><b>${esc(b.bankName)}:</b> most selected candidates (${topS.selected}, ${f1(topS.shareOfBankSelectedPct)}%) came from the <b>${esc(topS.bucket)}</b> bucket. The highest selection rate was in <b>${esc(topR.bucket)}</b> (${f1(topR.selectionRatePct)}%) and the lowest in <b>${esc(lowR.bucket)}</b> (${f1(lowR.selectionRatePct)}%). Selected candidates' ratios ranged from ${f2(rs.min)} to ${f2(rs.max)}.</div>
+  <div class="legend"><span>Ratio range of selected candidates</span><span><span class="sw" style="opacity:.25"></span>each candidate</span><span><span class="sw"></span>min–max</span><span>┃ median</span></div>
+  <div class="strip">${b.candidates.map(c=>`<div class="t" style="left:${P(c.ratio)}%"></div>`).join('')}
+   <div class="rg" style="left:${P(rs.min)}%;width:${P(rs.max)-P(rs.min)}%"></div>
+   <div class="md" style="left:${P(rs.median)}%"><em>${f2(rs.median)}</em></div>${ax}</div>
+  <div class="legend" style="margin-top:18px"><span><span class="sw"></span>selection rate</span><span><span class="sw o"></span>share of bank's selected</span></div>
+  <div class="box">${b.buckets.map(x=>`<div class="row"><div class="lb">${esc(x.bucket)}</div>
+   <div><div class="bar"><i style="width:${mxR?x.selectionRatePct/mxR*100:0}%"></i></div><div class="bar" style="height:7px;margin-top:4px"><i class="o" style="width:${mxS?x.shareOfBankSelectedPct/mxS*100:0}%"></i></div></div>
+   <div class="val">${f1(x.selectionRatePct)}%<small>${x.selected} sel · ${f1(x.shareOfBankSelectedPct)}% share</small></div></div>`).join('')}</div>
+  <h2 style="margin:26px 0 10px;font-size:.9rem">Selected candidates <b>${b.candidates.length}</b></h2>
+  <div class="scroll"><table><thead><tr><th>Merit</th><th>Roll</th><th>Group</th><th>Ratio</th><th>Bucket</th></tr></thead><tbody>
+  ${cands.map(c=>`<tr><td>#${c.meritRank}</td><td>${c.roll}</td><td>G${c.group}</td><td>${f2(c.ratio)}</td><td>${esc(c.bucket)}</td></tr>`).join('')}</tbody></table></div>
+  ${b.candidates.length>15?`<button class="btn" id="more">${showAll?'Show fewer':'Show all '+b.candidates.length}</button>`:''}
+  ${b.unmatchedRolls&&b.unmatchedRolls.length?`<p class="lead" style="margin-top:10px">${b.unmatchedRolls.length} roll(s) not found in viva lists.</p>`:''}`;
+  const m=$('#more');if(m)m.onclick=()=>{showAll=!showAll;detail()};
+}
+
+function lookup(){
+  const q=$('#roll').value.trim(),o=$('#rres');
+  if(!q){o.innerHTML='';return}
+  const h=rollIdx.get(+q);
+  o.innerHTML=h?`<div class="hit"><span class="tag">${esc(q)}</span> selected in ${h.length} bank${h.length>1?'s':''} · Group G${h[0].group} · ratio ${f2(h[0].ratio)} (${esc(h[0].bucket)})${h.map(x=>`<div>${esc(x.bank)} <span class="mono">— merit #${x.rank}</span></div>`).join('')}</div>`
+   :`<div class="hit">${/^\d{4,}$/.test(q)?'Roll '+esc(q)+' is not in the final selected lists.':'Keep typing the full roll number…'}</div>`;
+}
+
+function groups(){
+  const rows=D.groups.map(g=>{const s=(grpSel.get(g.group)||new Set()).size;return{...g,sel:s,rate:g.vivaCandidates?s/g.vivaCandidates*100:0}});
+  rows.sort((a,b)=>sortDir*((a[sortKey]>b[sortKey])-(a[sortKey]<b[sortKey])));
+  const H=[['group','Group'],['reportingTime','Viva date'],['ratio','Ratio'],['writtenInRange','Written'],['vivaCandidates','Viva'],['sel','Selected'],['rate','Rate']];
+  $('#gt').innerHTML=`<thead><tr>${H.map(h=>`<th class="s" data-k="${h[0]}">${h[1]}${sortKey===h[0]?(sortDir>0?' ↑':' ↓'):''}</th>`).join('')}</tr></thead><tbody>
+  ${rows.map(g=>`<tr><td>G${g.group}</td><td>${esc(g.reportingTime)}</td><td>${f2(g.ratio)}</td><td>${g.writtenInRange}</td><td>${g.vivaCandidates}</td><td>${g.sel}</td><td>${f1(g.rate)}%</td></tr>`).join('')}</tbody>`;
+  $('#gt').querySelectorAll('th.s').forEach(t=>t.onclick=()=>{const k=t.dataset.k;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=-1}groups()});
+}
+
+/* ============================================================
+   VISITOR COUNTER (dedicated for SO-10220)
+============================================================ */
+async function fetchVisitorCount() {
+    const KEY = 'plabonkumersarker-so10220-v1';
+    const SESSION_KEY = 'so10220_archive_visited';
+    const el = document.getElementById('visitorCount');
+
+    if (!el) return;
+
+    const hasBeenCounted = sessionStorage.getItem(SESSION_KEY);
+    const action = hasBeenCounted ? 'get' : 'hit';
+    const endpoint = `https://countapi.mileshilliard.com/api/v1/${action}/${KEY}`;
+
+    try {
+        const res = await fetch(endpoint, { cache: 'no-cache' });
+        if (!res.ok) throw new Error('API fail');
+
+        const data = await res.json();
+
+        if (data && typeof data.value === 'number') {
+            el.textContent = data.value.toLocaleString();
+            if (!hasBeenCounted) {
+                sessionStorage.setItem(SESSION_KEY, 'true');
+            }
+        } else {
+            el.textContent = '—';
+        }
+    } catch (e) {
+        console.error("Visitor Counter Error:", e);
+        el.textContent = '—';
+    }
+}
+
+init();
+fetchVisitorCount();
+</script>
+</body>
+</html>
